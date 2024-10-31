@@ -1,47 +1,42 @@
-# Start with a CUDA-compatible base image
-FROM nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
+# Start with an official CUDA base image
+FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04
 
 # Install essential tools and dependencies
 RUN apt-get update && apt-get install -y \
     git \
-    wget \
     curl \
-    build-essential \
-    libgfortran5 \
+    bzip2 \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Miniconda for package management
-RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh && \
+# Download and install a specific version of Miniconda to avoid 'latest' issues
+RUN curl -L https://repo.anaconda.com/miniconda/Miniconda3-py39_4.10.3-Linux-x86_64.sh -o /tmp/miniconda.sh --retry 5 --retry-delay 10 && \
     bash /tmp/miniconda.sh -b -p /opt/conda && \
     rm /tmp/miniconda.sh && \
     /opt/conda/bin/conda clean -tipsy
 
-# Set Conda environment and CUDA paths
-ENV PATH="/opt/conda/bin:$PATH"
-ENV CUDA_HOME="/usr/local/cuda"
+# Set up environment variables for Conda and CUDA
+ENV PATH="/opt/conda/bin:$PATH" \
+    CUDA_HOME="/usr/local/cuda"
 
-# Create and activate the Conda environment for BindCraft
-RUN conda create -n bindcraft-conda python=3.9 && \
-    echo "source activate bindcraft-conda" > ~/.bashrc
+# Install micromamba as a faster alternative to Conda for package resolution
+RUN /opt/conda/bin/conda install -c conda-forge micromamba && \
+    /opt/conda/bin/conda clean -afy
 
-# Install BindCraft dependencies through Conda
-RUN conda install -n bindcraft-conda -c conda-forge \
-    pandas numpy=1.26.4 biopython==1.79 scipy=1.10.1 \
-    seaborn tqdm jupyter ffmpeg && \
-    conda clean -afy
+# Use micromamba to create and activate the BindCraft environment with dependencies
+RUN micromamba create -n bindcraft-env -c conda-forge -c bioconda python=3.9 numpy=1.26.4 biopython=1.79 scipy=1.10.1 seaborn jax[cuda11_pip] -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html && \
+    micromamba clean -afy
 
-# Install JAX with CUDA 11 support
-RUN pip install jax[cuda11_pip] -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
-
-# Clone BindCraft repository and install PyRosetta manually
+# Clone the BindCraft repository
 WORKDIR /app
-RUN git clone https://github.com/martinpacesa/BindCraft && \
-    curl -L -o pyrosetta.whl 'https://graylab.jhu.edu/download/PyRosetta4/archive/release/PyRosetta4.Release.python39.ubuntu.wheel/pyrosetta-2024.38+release.200d5f9a7d-cp39-cp39-linux_x86_64.whl' && \
+RUN git clone https://github.com/martinpacesa/BindCraft .
+
+# Manually install PyRosetta, required by BindCraft
+RUN curl -L -o pyrosetta.whl 'https://graylab.jhu.edu/download/PyRosetta4/archive/release/PyRosetta4.Release.python39.ubuntu.wheel/pyrosetta-2024.38+release.200d5f9a7d-cp39-cp39-linux_x86_64.whl' && \
     pip install ./pyrosetta.whl && rm pyrosetta.whl
 
-# Final BindCraft installation steps
-RUN bash BindCraft/install_bindcraft.sh --cuda '11.8' --pkg_manager 'conda'
+# Run BindCraft's installation script, using the specified CUDA version
+RUN bash BindCraft/install_bindcraft.sh --cuda '11.8' --pkg_manager 'micromamba'
 
-# Default command
+# Define the default command
 CMD ["bash"]
