@@ -1,5 +1,5 @@
-# Use a minimal CUDA runtime image; confirm compatibility with the target architecture on the cluster
-FROM --platform=linux/amd64 nvidia/cuda:12.4.0-cudnn8-runtime-ubuntu22.04
+# Use a minimal CUDA runtime image with a version that is known to be available
+FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04
 
 # Install required dependencies and clean up after
 RUN apt-get update && apt-get install -y \
@@ -26,7 +26,7 @@ WORKDIR /app
 RUN git clone https://github.com/martinpacesa/BindCraft .
 
 # Run the BindCraft installation script with minimal dependencies and clean up
-RUN bash install_bindcraft.sh --cuda '12.4' --pkg_manager 'conda' && \
+RUN bash install_bindcraft.sh --cuda '11.8' --pkg_manager 'conda' && \
     conda clean -afy
 
 # Define default command
