@@ -17,15 +17,19 @@ RUN curl -L https://repo.anaconda.com/miniconda/Miniconda3-py39_4.10.3-Linux-x86
 
 # Set up environment variables for Conda and CUDA
 ENV PATH="/opt/conda/bin:$PATH" \
-    CUDA_HOME="/usr/local/cuda"
+    CUDA_HOME="/usr/local/cuda" \
+    MAMBA_ROOT_PREFIX="/opt/conda"
 
 # Install micromamba as a faster alternative to Conda for package resolution
 RUN /opt/conda/bin/conda install -c conda-forge micromamba && \
     /opt/conda/bin/conda clean -afy
 
-# Use micromamba to create and activate the BindCraft environment with dependencies
-RUN micromamba create -n bindcraft-env -c conda-forge -c bioconda python=3.9 numpy=1.26.4 biopython=1.79 scipy=1.10.1 seaborn jax[cuda11_pip] -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html && \
+# Create the Conda environment and install basic BindCraft dependencies
+RUN micromamba create -n bindcraft-env -c conda-forge -c bioconda python=3.9 numpy=1.26.4 biopython=1.79 scipy=1.10.1 seaborn && \
     micromamba clean -afy
+
+# Install JAX with pip in a separate step to isolate dependencies
+RUN /opt/conda/envs/bindcraft-env/bin/pip install jax[cuda11_pip] -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 
 # Clone the BindCraft repository
 WORKDIR /app
