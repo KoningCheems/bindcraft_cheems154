@@ -31,16 +31,13 @@ RUN micromamba create -n bindcraft-env -c conda-forge -c bioconda python=3.9 num
 # Install JAX with pip in a separate step to isolate dependencies
 RUN /opt/conda/envs/bindcraft-env/bin/pip install jax[cuda11_pip] -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 
-# Clone the BindCraft repository
+# Set working directory and clone the BindCraft repository
 WORKDIR /app
 RUN git clone https://github.com/martinpacesa/BindCraft .
+RUN ls -la /app  # Check that files were cloned
 
-# Install PyRosetta using pyrosetta-installer
-RUN pip install pyrosetta-installer && \
-    python -c 'import pyrosetta_installer; pyrosetta_installer.install_pyrosetta(silent=True, type="Release")'
-
-# Run BindCraft's installation script, using the specified CUDA version
-RUN bash BindCraft/install_bindcraft.sh --cuda '11.8' --pkg_manager 'micromamba'
+# Ensure the install script has executable permissions and run it
+RUN chmod +x install_bindcraft.sh && bash install_bindcraft.sh --cuda '11.8' --pkg_manager 'micromamba'
 
 # Define the default command
 CMD ["bash"]
