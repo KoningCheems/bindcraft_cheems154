@@ -11,20 +11,21 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3 # Updated to v3
+        uses: actions/checkout@v3
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3 # Updated to v3
+        uses: docker/setup-buildx-action@v2
 
       - name: Log in to Docker Hub
-        uses: docker/login-action@v2 # This is the latest version for login-action
+        uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and Push
-        uses: docker/build-push-action@v4 # Updated to v4
+        uses: docker/build-push-action@v4
         with:
+          context: .
           push: true
-          tags: cheems154/bindcraft_min:latest
+          tags: cheems154/bindcraft_container:latest
           platforms: linux/amd64
