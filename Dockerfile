@@ -36,7 +36,7 @@ WORKDIR /app
 RUN git clone https://github.com/martinpacesa/BindCraft .
 
 # Manually install PyRosetta, required by BindCraft
-RUN curl -L -o pyrosetta.whl 'https://graylab.jhu.edu/download/PyRosetta4/archive/release/PyRosetta4.Release.python39.ubuntu.wheel/pyrosetta-2024.38+release.200d5f9a7d-cp39-cp39-linux_x86_64.whl' && \
+RUN curl -L -o pyrosetta.whl 'https://graylab.jhu.edu/download/PyRosetta4/archive/release/PyRosetta4.Release.python39.ubuntu.wheel/pyrosetta-2024.38%2Brelease.200d5f9a7d-cp39-cp39-linux_x86_64.whl' && \
     pip install ./pyrosetta.whl && rm pyrosetta.whl
 
 # Run BindCraft's installation script, using the specified CUDA version
