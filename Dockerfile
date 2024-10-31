@@ -35,10 +35,9 @@ RUN /opt/conda/envs/bindcraft-env/bin/pip install jax[cuda11_pip] -f https://sto
 WORKDIR /app
 RUN git clone https://github.com/martinpacesa/BindCraft .
 
-# Manually install PyRosetta, required by BindCraft
-RUN curl -L -o /tmp/pyrosetta.whl 'https://graylab.jhu.edu/download/PyRosetta4/archive/release/PyRosetta4.Release.python39.ubuntu.wheel/pyrosetta-2024.38%2Brelease.200d5f9a7d-cp39-cp39-linux_x86_64.whl' && \
-    mv /tmp/pyrosetta.whl /app/pyrosetta.whl && \
-    pip install /app/pyrosetta.whl && rm /app/pyrosetta.whl
+# Install PyRosetta using pyrosetta-installer
+RUN pip install pyrosetta-installer && \
+    python -c 'import pyrosetta_installer; pyrosetta_installer.install_pyrosetta(silent=True, type="Release")'
 
 # Run BindCraft's installation script, using the specified CUDA version
 RUN bash BindCraft/install_bindcraft.sh --cuda '11.8' --pkg_manager 'micromamba'
